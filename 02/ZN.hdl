@@ -1,0 +1,12 @@
+CHIP ZN {
+    IN
+        in[16],
+        z, n;
+    OUT
+        out[16];
+
+    PARTS:
+    Mux16(a=in, b=false, sel=z, out=t);
+    Not16(in=t, out=nt);
+    Mux16(a=t, b=nt, sel=n, out=out);
+}
