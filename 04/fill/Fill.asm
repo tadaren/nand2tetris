@@ -36,7 +36,7 @@
     @8192
     D=D-A
     @LOOP
-    D;JGT
+    D;JGE
     @i
     D=M
     @SCREEN
