@@ -16,7 +16,7 @@ class Parser(inputFile: File){
 
     fun advance(){
         while(true) {
-            val line = lines[index].replace(Regex("//.*"), "").trim()
+            val line = lines[index].replace(Regex("""//.*"""), "").trim()
             index++
             if (line.isNotEmpty()) {
                 currentLine = line
