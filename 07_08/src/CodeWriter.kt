@@ -4,6 +4,8 @@ class CodeWriter(outputFile: File){
     private val writer = outputFile.printWriter()
     private var compJumpLabelNum = 0
     private var currentFileName = outputFile.name.substringAfter('.')
+    private var currentFunctionName: String = ""
+    private var returnSymbolNum = 0
 
     fun setFileName(fileName: String){
         currentFileName = fileName
@@ -13,7 +15,7 @@ class CodeWriter(outputFile: File){
         when(command) {
             "add" -> {
                 writer.println("""
-                    @SP
+                    @SP     // add
                     AM=M-1
                     D=M
                     A=A-1
@@ -23,7 +25,7 @@ class CodeWriter(outputFile: File){
             }
             "sub" -> {
                 writer.println("""
-                    @SP
+                    @SP     // sub
                     A=M-1
                     D=M
                     A=A-1
@@ -35,14 +37,14 @@ class CodeWriter(outputFile: File){
             }
             "neg" -> {
                 writer.println("""
-                    @SP
+                    @SP     // neg
                     A=M-1
                     M=-M
                 """.trimIndent())
             }
             "eq" -> {
                 writer.println("""
-                    @SP
+                    @SP     // eq
                     AM=M-1
                     D=M
                     A=A-1
@@ -64,7 +66,7 @@ class CodeWriter(outputFile: File){
             }
             "gt" -> {
                 writer.println("""
-                    @SP
+                    @SP     // gt
                     AM=M-1
                     D=M
                     A=A-1
@@ -86,7 +88,7 @@ class CodeWriter(outputFile: File){
             }
             "lt" -> {
                 writer.println("""
-                    @SP
+                    @SP     // lt
                     AM=M-1
                     D=M
                     A=A-1
@@ -108,7 +110,7 @@ class CodeWriter(outputFile: File){
             }
             "and" -> {
                 writer.println("""
-                    @SP
+                    @SP     // and
                     A=M-1
                     D=M
                     A=A-1
@@ -120,7 +122,7 @@ class CodeWriter(outputFile: File){
             }
             "or" -> {
                 writer.println("""
-                    @SP
+                    @SP     // or
                     A=M-1
                     D=M
                     A=A-1
@@ -132,7 +134,7 @@ class CodeWriter(outputFile: File){
             }
             "not" -> {
                 writer.println("""
-                    @SP
+                    @SP     // not
                     A=M-1
                     M=!M
                 """.trimIndent())
@@ -145,7 +147,7 @@ class CodeWriter(outputFile: File){
             when (segment) {
                 "constant" -> {
                     writer.println("""
-                            @$index
+                            @$index     // push constant $index
                             D=A
                             @SP
                             A=M
@@ -157,7 +159,7 @@ class CodeWriter(outputFile: File){
                 }
                 "local" -> {
                     writer.println("""
-                            @LCL
+                            @LCL        // push local $index
                             D=M
                             @$index
                             A=D+A
@@ -172,7 +174,7 @@ class CodeWriter(outputFile: File){
                 }
                 "argument" -> {
                     writer.println("""
-                            @ARG
+                            @ARG        // push argument $index
                             D=M
                             @$index
                             A=D+A
@@ -187,7 +189,7 @@ class CodeWriter(outputFile: File){
                 }
                 "this" -> {
                     writer.println("""
-                            @THIS
+                            @THIS       // push this $index
                             D=M
                             @$index
                             A=D+A
@@ -202,7 +204,7 @@ class CodeWriter(outputFile: File){
                 }
                 "that" -> {
                     writer.println("""
-                            @THAT
+                            @THAT       // push that $index
                             D=M
                             @$index
                             A=D+A
@@ -217,7 +219,7 @@ class CodeWriter(outputFile: File){
                 }
                 "pointer" -> {
                     writer.println("""
-                            @3
+                            @3          // push pointer $index
                             D=A
                             @$index
                             A=A+D
@@ -232,7 +234,7 @@ class CodeWriter(outputFile: File){
                 }
                 "temp" -> {
                     writer.println("""
-                            @5
+                            @5          // push temp $index
                             D=A
                             @$index
                             A=A+D
@@ -247,7 +249,7 @@ class CodeWriter(outputFile: File){
                 }
                 "static" -> {
                     writer.println("""
-                            @$currentFileName.$index
+                            @$currentFileName.$index    // push static $index
                             D=M
                             @SP
                             A=M
@@ -262,7 +264,7 @@ class CodeWriter(outputFile: File){
             when (segment) {
                 "local" -> {
                     writer.println("""
-                            @LCL
+                            @LCL        // pop local $index
                             D=M
                             @$index
                             D=D+A
@@ -278,7 +280,7 @@ class CodeWriter(outputFile: File){
                 }
                 "argument" -> {
                     writer.println("""
-                            @ARG
+                            @ARG        // pop argument $index
                             D=M
                             @$index
                             D=D+A
@@ -294,7 +296,7 @@ class CodeWriter(outputFile: File){
                 }
                 "this" -> {
                     writer.println("""
-                            @THIS
+                            @THIS       // pop this $index
                             D=M
                             @$index
                             D=D+A
@@ -310,7 +312,7 @@ class CodeWriter(outputFile: File){
                 }
                 "that" -> {
                     writer.println("""
-                            @THAT
+                            @THAT       // pop that $index
                             D=M
                             @$index
                             D=D+A
@@ -326,7 +328,7 @@ class CodeWriter(outputFile: File){
                 }
                 "pointer" -> {
                     writer.println("""
-                            @3
+                            @3          // pop pointer $index
                             D=A
                             @$index
                             D=D+A
@@ -342,7 +344,7 @@ class CodeWriter(outputFile: File){
                 }
                 "temp" -> {
                     writer.println("""
-                            @5
+                            @5          // pop temp $index
                             D=A
                             @$index
                             D=D+A
@@ -358,7 +360,7 @@ class CodeWriter(outputFile: File){
                 }
                 "static" -> {
                     writer.println("""
-                            @SP
+                            @SP         // pop static $index
                             AM=M-1
                             D=M
                             @$currentFileName.$index
@@ -366,6 +368,159 @@ class CodeWriter(outputFile: File){
                         """.trimIndent())
                 }
             }
+        }
+    }
+
+    fun writeInit(){
+        writer.println("""
+            @261        // init
+            D=A
+            @SP
+            M=D
+            @Sys.init
+            0;JMP
+        """.trimIndent())
+    }
+
+    fun writeLabel(label: String){
+        writer.println("""
+            ($currentFunctionName$$label)   // label $label
+        """.trimIndent())
+    }
+
+    fun writeGoto(label: String){
+        writer.println("""
+            @$currentFunctionName$$label     // goto $label
+            0;JMP
+        """.trimIndent())
+    }
+
+    fun writeIf(label: String){
+        writer.println("""
+            @SP         // if-goto $label
+            AM=M-1
+            D=M
+            @$currentFunctionName$$label
+            D;JNE
+        """.trimIndent())
+    }
+
+    fun writeCall(functionName: String, numArgs: Int){
+        writer.println("""
+            @ReturnSymbol$returnSymbolNum   // call $functionName $numArgs
+            D=A
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
+            @LCL
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
+            @ARG
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
+            @THIS
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
+            @THAT
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            MD=M+1
+            @$numArgs
+            D=D-A
+            @5
+            D=D-A
+            @ARG
+            M=D
+            @SP
+            D=M
+            @LCL
+            M=D
+            @$functionName
+            0;JMP
+            (ReturnSymbol$returnSymbolNum)
+        """.trimIndent())
+        returnSymbolNum++
+    }
+
+    fun writeReturn(){
+        writer.println("""
+            @LCL        // return
+            D=M
+            @R13
+            M=D
+            @5
+            A=D-A
+            D=M
+            @R14
+            M=D
+            @SP
+            A=M-1
+            D=M
+            @ARG
+            A=M
+            M=D
+            @ARG
+            D=M+1
+            @SP
+            M=D
+            @R13
+            AM=M-1
+            D=M
+            @THAT
+            M=D
+            @R13
+            AM=M-1
+            D=M
+            @THIS
+            M=D
+            @R13
+            AM=M-1
+            D=M
+            @ARG
+            M=D
+            @R13
+            A=M-1
+            D=M
+            @LCL
+            M=D
+            @R14
+            A=M
+            0;JMP
+        """.trimIndent())
+    }
+
+    fun writeFunction(functionName: String, numLocals: Int){
+        currentFunctionName = functionName
+        writer.println("""
+            ($functionName)     // function $functionName $numLocals
+        """.trimIndent())
+        repeat(numLocals){
+            writer.println("""
+                @0
+                D=A
+                @SP
+                A=M
+                M=D
+                @SP
+                M=M+1
+            """.trimIndent())
         }
     }
 
