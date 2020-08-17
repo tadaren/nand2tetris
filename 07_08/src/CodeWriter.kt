@@ -152,9 +152,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "local" -> {
@@ -167,9 +166,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "argument" -> {
@@ -182,9 +180,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "this" -> {
@@ -197,9 +194,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "that" -> {
@@ -212,9 +208,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "pointer" -> {
@@ -227,9 +222,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "temp" -> {
@@ -242,9 +236,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
                 "static" -> {
@@ -254,9 +247,8 @@ class CodeWriter(outputFile: File){
                             @SP
                             A=M
                             M=D
-                            D=A+1
                             @SP
-                            M=D
+                            M=M+1
                         """.trimIndent())
                 }
             }
