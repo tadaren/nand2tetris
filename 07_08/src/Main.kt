@@ -28,9 +28,7 @@ fun parse(inputFile: File, writer: CodeWriter){
     val parser = Parser(inputFile)
     while(parser.hasMoreCommands()){
         parser.advance()
-        val commandType = parser.commandType()
-        println(commandType)
-        when(commandType){
+        when(val commandType = parser.commandType()){
             CommandType.C_ARITHMETIC -> {
                 writer.writeArithmetic(parser.arg1())
             }
