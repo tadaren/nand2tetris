@@ -4,6 +4,7 @@ class CompilationEngine(inputFile: File, outputFile: File){
 
     private val tokenizer = JackTokenizer(inputFile)
     private val writer = outputFile.printWriter()
+    private val symbolTable = SymbolTable()
 
     init {
         tokenizer.advance()
@@ -44,7 +45,8 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(tokenizer.tokenType() != TokenType.IDENTIFIER){
             throw CompileError("""expect identifier""")
         }
-        compileTerminal()
+        writer.println("<identifier> 'class' ${tokenizer.identifier()} </identifier>")
+        tokenizer.advance()
 
         if(tokenizer.tokenType() != TokenType.SYMBOL){
             throw CompileError("""expect "{"""")
@@ -79,12 +81,16 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(!isType()){
             throw CompileError("""expect type "int" | "char" | "boolean" | className """)
         }
+        val type = tokenizer.keyWord()
         compileTerminal()
 
         if(tokenizer.tokenType() != TokenType.IDENTIFIER){
             throw CompileError("""expect varName""")
         }
-        compileTerminal()
+        val name = tokenizer.identifier()
+        symbolTable.define(name, type.toString(), VariableKind.FIELD)
+        writer.println("<identifier> 'field' ${tokenizer.identifier()} 'defined' '${symbolTable.indexOf(name)}' </identifier>")
+        tokenizer.advance()
 
         while(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == ','){
             compileTerminal()
@@ -104,6 +110,7 @@ class CompilationEngine(inputFile: File, outputFile: File){
 
     fun compileSubroutine(){
         writer.println("<subroutineDec>")
+        symbolTable.startSubroutine()
 
         compileTerminal()
 
@@ -115,7 +122,8 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(tokenizer.tokenType() != TokenType.IDENTIFIER) {
             throw CompileError("expect subroutineName")
         }
-        compileTerminal()
+        writer.println("<identifier> 'subroutine' ${tokenizer.identifier()} </identifier>")
+        tokenizer.advance()
 
         if(tokenizer.tokenType() != TokenType.SYMBOL || tokenizer.symbol() != '('){
             throw CompileError("""expect "("""")
@@ -154,12 +162,16 @@ class CompilationEngine(inputFile: File, outputFile: File){
     fun compileParameterList(){
         writer.println("<parameterList>")
         if(isType()){
+            val type = tokenizer.keyWord()
             compileTerminal()
 
             if(tokenizer.tokenType() != TokenType.IDENTIFIER){
                 throw CompileError("""expect varName""")
             }
-            compileTerminal()
+            val name = tokenizer.identifier()
+            symbolTable.define(name, type.toString(), VariableKind.ARG)
+            writer.println("<identifier> 'argument' ${tokenizer.identifier()} 'defined' '${symbolTable.indexOf(name)}' </identifier>")
+            tokenizer.advance()
 
             while(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == ','){
                 compileTerminal()
@@ -172,7 +184,10 @@ class CompilationEngine(inputFile: File, outputFile: File){
                 if(tokenizer.tokenType() != TokenType.IDENTIFIER){
                     throw CompileError("""expect varName""")
                 }
-                compileTerminal()
+                val name = tokenizer.identifier()
+                symbolTable.define(name, type.toString(), VariableKind.ARG)
+                writer.println("<identifier> 'argument' ${tokenizer.identifier()} 'defined' '${symbolTable.indexOf(name)}' </identifier>")
+                tokenizer.advance()
             }
         }
         writer.println("</parameterList>")
@@ -185,19 +200,26 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(!isType()){
             throw CompileError("""expect type "int" | "char" | "boolean" | className """)
         }
+        val type = tokenizer.keyWord()
         compileTerminal()
 
         if(tokenizer.tokenType() != TokenType.IDENTIFIER){
             throw CompileError("""expect varName""")
         }
-        compileTerminal()
+        val name = tokenizer.identifier()
+        symbolTable.define(name, type.toString(), VariableKind.VAR)
+        writer.println("<identifier> 'var' ${tokenizer.identifier()} 'defined' '${symbolTable.indexOf(name)}' </identifier>")
+        tokenizer.advance()
 
         while(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == ','){
             compileTerminal()
             if(tokenizer.tokenType() != TokenType.IDENTIFIER){
                 throw CompileError("""expect varName""")
             }
-            compileTerminal()
+            val name = tokenizer.identifier()
+            symbolTable.define(name, type.toString(), VariableKind.VAR)
+            writer.println("<identifier> 'var' ${tokenizer.identifier()} 'defined' '${symbolTable.indexOf(name)}' </identifier>")
+            tokenizer.advance()
         }
 
         if(tokenizer.tokenType() != TokenType.SYMBOL || tokenizer.symbol() != ';'){
@@ -245,7 +267,14 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(tokenizer.tokenType() != TokenType.IDENTIFIER){
             throw CompileError("expect subroutineName or className or varName")
         }
-        compileTerminal()
+        val name = tokenizer.identifier()
+        val kind = symbolTable.kindOf(name)
+        if(kind == VariableKind.NONE){
+            writer.println("<identifier> 'class or subroutine' ${tokenizer.identifier()} </identifier>")
+        }else{
+            writer.println("<identifier> '${kind}' ${tokenizer.identifier()} 'used' '${symbolTable.indexOf(name)}' </identifier>")
+        }
+        tokenizer.advance()
 
         // subroutine call
         if(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == '('){
@@ -263,7 +292,8 @@ class CompilationEngine(inputFile: File, outputFile: File){
             if(tokenizer.tokenType() != TokenType.IDENTIFIER) {
                 throw CompileError("expect subroutineName")
             }
-            compileTerminal()
+            writer.println("<identifier> 'subroutine' ${tokenizer.identifier()} </identifier>")
+            tokenizer.advance()
 
             if(tokenizer.tokenType() != TokenType.SYMBOL || tokenizer.symbol() != '(') {
                 throw CompileError("""expect "("""")
@@ -294,7 +324,10 @@ class CompilationEngine(inputFile: File, outputFile: File){
         if(tokenizer.tokenType() != TokenType.IDENTIFIER){
             throw CompileError("""expect varName""")
         }
-        compileTerminal()
+        val name = tokenizer.identifier()
+        val kind = symbolTable.kindOf(name)
+        writer.println("<identifier> '${kind}' ${tokenizer.identifier()} 'used' '${symbolTable.indexOf(name)}' </identifier>")
+        tokenizer.advance()
 
         if(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == '['){
             compileTerminal()
@@ -453,7 +486,14 @@ class CompilationEngine(inputFile: File, outputFile: File){
         }else if(type == TokenType.KEYWORD && tokenizer.keyWord() in setOf(KeyWord.TRUE, KeyWord.FALSE, KeyWord.NULL, KeyWord.THIS)){
             compileTerminal()
         }else if(type == TokenType.IDENTIFIER){
-            compileTerminal()
+            val name = tokenizer.identifier()
+            val kind = symbolTable.kindOf(name)
+            if(kind == VariableKind.NONE){
+                writer.println("<identifier> 'class or subroutine' ${tokenizer.identifier()} </identifier>")
+            }else {
+                writer.println("<identifier> '${kind}' ${tokenizer.identifier()} 'used' '${symbolTable.indexOf(name)}' </identifier>")
+            }
+            tokenizer.advance()
 
             if(tokenizer.tokenType() == TokenType.SYMBOL && tokenizer.symbol() == '['){
                 compileTerminal()
@@ -480,7 +520,8 @@ class CompilationEngine(inputFile: File, outputFile: File){
                 if(tokenizer.tokenType() != TokenType.IDENTIFIER) {
                     throw CompileError("expect subroutineName")
                 }
-                compileTerminal()
+                writer.println("<identifier> 'subroutine' ${tokenizer.identifier()} </identifier>")
+                tokenizer.advance()
 
                 if(tokenizer.tokenType() != TokenType.SYMBOL || tokenizer.symbol() != '(') {
                     throw CompileError("""expect "("""")
